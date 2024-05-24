@@ -1,4 +1,4 @@
-# ChurnAnalysis
+# RFM segmentation and Churn Analysis
 
 The objective of this SQL code is to classify the company's merchants/clients according to their RFM (Recency, Frequency, Monetary) in order to find the best customers taking into account their last transactiom, the frequency of purchases and the value of these purchases.
 
