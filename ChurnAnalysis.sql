@@ -1,6 +1,9 @@
 -- Tomando como base data_model.agg_monthly, se une a cada cuenta el nombre (name_merchant) 
 -- proveniente de reports.fz2_merchant_master adicional al uso de medios de cada medio de pago por mes
 
+--Taking data_model.agg_monthly as basis, each account is joined with its name (name_merchant)
+--That comes from reports.fz2_merchant_master and the payment methods by month as well
+
 drop table if exists data_model_corrected;
 
 select
@@ -39,6 +42,8 @@ group by
 
 
 -- Se agrupan los valores por (name_merchant) en términos económicos, provenientes de la tabla reports.fz1_client_base
+-- The values are grouped by name_merchant using the financial metrics from the reports.fz1_client_base table
+
 
 drop table if exists fz1_grouped;
 
@@ -62,6 +67,7 @@ group by
 
 
 -- Se unen las tablas de billing_date por uso de medios de pago y las medidas económicas provenientes de fz1_client_base
+-- billing_date and fz1_client_base tables are joined
 
 drop table if exists data_model_corrected_2;
 select t1.*,
@@ -78,6 +84,8 @@ on t1.name_merchant_=t2.name_merchant and last_day(t1.billing_date_monthly)=last
 -- Con una definición de Churn de 6 meses se evalúan mes a mes cuales son los comercios activos,
 -- mediante un bucle que se ubica en cada mes y revisa los últimos 6 meses de procesamiento se determina 
 -- la propiedad de actividad de los comercios.
+-- Churn is defined as 6 or more months of inactivity, month to month all the merchants are evaluated,
+-- using a loop which reviews the most recent 6 months in order to determine a merchant's activity
 
 create or replace procedure active_customers_2() language plpgsql as $$
 declare cnt integer:= 1; x date:= '2020-01-01'; meses_churn integer := 6 ;
@@ -116,6 +124,7 @@ call active_customers_2();
 
 
 -- Añado a la tabla de clientes activos su uso de cada medio de pago por mes.
+-- Payment method usage is added to the active merchants table
 
 drop table if exists active_customers_2;
 
@@ -151,6 +160,7 @@ where
 
 -- Resumo la cantidad total de métodos utilizados, reviso cuales eran activos 
 -- e identifico cuales eran inactivos cada mes (inactividad mayor a 3 meses)
+-- The payment methods are summarised, active and inactive merchants are identified
 
 drop table if exists economicas_nombre_metodos_act_inact;
 
@@ -168,6 +178,7 @@ from
 
 
 -- Se eliminan posibles duplicados
+-- Duplicates are removed
 
 drop table if exists distinct_activos_nombre_pre;
 
@@ -181,6 +192,7 @@ from
 
 
 -- Se reemplazan valores de null por 0 en métricas financieras
+-- Null values are replaced by 0
 
 drop table if exists distinct_activos_nombre;
 
@@ -227,6 +239,7 @@ from
 
 
 -- Primera etapa del dashboard
+-- Dashboard first steps
 
 drop table if exists dashboard_nombre;
 select mes, count(1) as registros, sum(tpt) as tpt, sum(tpv_usd) tpv, sum(revenue_usd) as revenue, sum(gm_usd) as gm  
@@ -256,6 +269,7 @@ group by nombre_merchant  ;
 
 
 -- nombres creados
+--Created merchant names
 drop table if exists names_created;
 select fecha_creacion , count(1) as cantidad
 into names_created 
@@ -274,6 +288,7 @@ order by fecha_creacion desc;
 
 
 -- cuentas creadas
+-- Created accounts
 drop table if exists account_created;
 select fecha_creacion, count(1) as cantidad
 into account_created
@@ -292,6 +307,7 @@ limit 10;
 
 --cuentos mes de primera trx
 -- primera trx
+-- First transaction month
 drop table if exists primera_transaccion_nombre;
 select name_merchant_ as nombre_merchant  , min(billing_date_monthly) as primera_trx
 into primera_transaccion_nombre 
@@ -301,6 +317,7 @@ group by nombre_merchant ;
 
 
 -- conteo primera transacción por mes
+-- Count of first transaction per month
 drop table if exists primera_transaccion_nombre_es;
 select primera_trx, count(1) as cantidad_primera_trx
 into primera_transaccion_nombre_es
@@ -311,6 +328,7 @@ group by primera_trx
 
 
 -- uno las creadas y la primera trx a la tabla que venía con los indicadores, mobs por creación y 
+-- Join created and first transaction to the main table
 drop table if exists activos_nombres_mobs;
 select t1.*
 , t2.fecha_creacion as fecha_creacion_nombre
